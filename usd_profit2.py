@@ -3,8 +3,8 @@
 import csv
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta 
-import matplotlib.pyplot as plt 
+from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seaborn as sns
 from keras.models import model_from_json
@@ -18,7 +18,7 @@ warnings.filterwarnings('ignore')
 import oandapy
 import pytz
 import configparser
- 
+
  #プライベートデータ
 config = configparser.ConfigParser()
 config.read('./config/config.txt')
@@ -53,7 +53,7 @@ def date_to_str(date):
 response = oanda.get_history(instrument="USD_JPY", granularity="D", count='5000')
 res = pd.DataFrame(response['candles'])
 res['time'] = res['time'].apply(lambda x:date_to_str(iso_to_jp(x)))
- 
+
  #特徴量の整理
 df = res[['time', 'openAsk', 'closeAsk', 'highAsk', 'lowAsk', 'volume']]
 df.columns = ['time', 'open', 'close', 'high', 'low', 'volume']
@@ -63,7 +63,7 @@ split_date = '2015/05/07 06:00:00'
 train, test = df[df['time'] < split_date], df[df['time'] >= split_date]
 del train['time']
 del test['time']
- 
+
  #ウィンドウの数
 window_len = 10
 
@@ -75,7 +75,7 @@ for i in range(len(train) - window_len):
 			  tmp.loc[:,col] = tmp[col] / tmp[col].iloc[0] - 1
 	  train_in.append(tmp)
 train_out = (train['close'][window_len:].values / train['close'][:-window_len].values)
- 
+
  #テストデータのクレイピング
 test_in = []
 for i in range(len(test) - window_len):
@@ -91,7 +91,7 @@ train_in = np.array(train_in)
 
 test_in = [np.array(test_input) for test_input in test_in]
 test_in = np.array(test_in)
-  
+
  #モデルの読み込み
 model_close = model_from_json(open('usd_model.json').read())
  #重みの読み込み
@@ -101,7 +101,7 @@ model_close.load_weights('usd_weights.h5')
 model_high = model_from_json(open('usd_high_model.json').read())
  #重みの読み込み
 model_high.load_weights('usd_high_weights.h5')
-
+# test comment
  #モデルの読み込み
 model_low = model_from_json(open('usd_low_model.json').read())
  #重みの読み込み
@@ -157,7 +157,7 @@ for i in range(len(pred_close)-1):
             print(i, int(total_return[i]),int(limit_l * -10000), 'limit_l')
             continue
         total_return[i] = total_return[i-1] + (past_close[i] - past_close[i+1]) * 10000
-        print(i, int(total_return[i]), int((past_close[i+1] - past_close[i]) * 10000))   
+        print(i, int(total_return[i]), int((past_close[i+1] - past_close[i]) * 10000))
 print(total_return)
 plt.plot(total_return)
 plt.show()
